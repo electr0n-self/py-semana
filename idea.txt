@@ -1,0 +1,9 @@
+On login use the recipe to generate a session id.
+
+Store this in a Sessions table, the table will have the userid(database primary key of the user table), the login time, last active time(last time they triggered a script), their ip and the session id.
+
+Each time a script is run I check for the IP in the DB. If it exists I open the session db to see who they are and update the last active time. 
+
+Then if after X minutes they are still inactive. A script running on the server that is checking for inactivity logs them out.
+
+I could append the session ID to the url and validate it against their login IP each time. This prevents someone else from pasting the url and becoming them.
