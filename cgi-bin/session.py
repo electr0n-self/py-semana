@@ -1,107 +1,64 @@
-#!/usr/bin/python
+""" semana - Web Session Management Module
 
-import time, cgi, cgitb, pymysql, Cookie, random, string, os
-import pages 
+    Author: Natalia Guaraldi
+    Date: 2015
+    Version: 0.1.0
 
+"""
 
-
-
-##################################
-# Functions
-##################################
+import Cookie, random, string, os
 
 
-def session_login(ip, email, password):
-	cookie = '';
+class Session(object):
+    """ Session object."""
 
-	#Check if login is successful
-	db = pymysql.connect(host="127.0.0.1", unix_socket='/tmp/mysql.sock', user='root', passwd=None, db='qanda')
+    def __init__(self, user_ip, domain, expiration):
+        self.valid = True
+        self.user_ip = user_ip
+        # Generate SID
+        sid = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(45))
+        self.sid = sid
+        # Create session in db
+        # Create cookie
+        cookie = Cookie.SimpleCookie()
+        cookie['SID'] = self.sid
+        cookie['domain'] = domain
+        cookie['expiration'] = expiration
+        self.cookie = cookie
 
-	cursor = db.cursor();
+    def start(self):
+        """ Start session. """
+        # Start db
+        pass
 
-	sql = "SELECT COUNT(idUsers) FROM Users WHERE Users.email = '%s' AND Users.password = '%s'" % (email, password);
+    def check(self):
+        """ Check if session is still valid."""
+        self.close()
+        return False
 
-	try:
-	    cursor.execute(sql);
-	    dataq = cursor.fetchall();
-	except:
-	    print("Error reading data from db.");
-
-
-	# Create session and send cookie 
-
-	if dataq[0][0]:
-
-	    # Create session id and store in db
-	    sid = generate_sid();
-	    sql = "INSERT INTO Session (session_id, session_ip, Users_idUsers, session_last_access) VALUES ('%s', '%s', 1, 1)" % (sid, ip);
-
-	    try:
-		cursor.execute(sql);
-		db.commit();
-	    except:
-		print "error writing to qanda.Session";
-
-	    # Create a cookie
-	    cookie = create_cookie(sid);
-
-	# Close connection to database
-	cursor.close();
-	db.close();
-
-	return cookie;
+    def close(self):
+        """ Finish the session. """
+        # Update db
+        # Close db connection
+        pass
 
 
-def session_check(ip):
-	#Checks if there is an open session	
-	if check_cookie():
-		cookie = get_cookie();
-		sid = cookie["SID"].value
-		# Open db connection
-		try:
-			db = pymysql.connect(host="127.0.0.1", unix_socket='/tmp/mysql.sock', user='root', passwd=None, db='qanda')
-		except:
-			print "Error opening db";
+class SessionCookie(Cookie.SimpleCookie):
+    """ Session cookie. """
 
-		cursor = db.cursor();
-		# Check session id and client's ip
-		sql = "SELECT COUNT(session_id) FROM Session WHERE Session.session_id = '%s' AND Session.session_ip = '%s'" % (sid, ip);
-		#try:
-		cursor.execute(sql);
-		session_check = cursor.fetchall();
-		#except:
-		 #   print("Error reading data from db.");
-		# Close db connection
-		cursor.close();
-		db.close();
-		if session_check[0][0]:
-			return True;			
-	return False;
-
-
-
+    def __init__(self, sid, domain, expiration):
+        pass
 
 
 def check_cookie():
-	# Check if client has a cookie
-	return os.environ.get('HTTP_COOKIE')
+    """ REMOVE THIS
+    Check if client has a cookie and, if so, returns it."""
+    cookie_string = os.environ.get('HTTP_COOKIE')
 
+    if cookie_string:
+        cookie = Cookie.SimpleCookie()
+        cookie.load(cookie_string)
+        return cookie
+    else:
+        return ""
 
-def get_cookie():
-	# Server gets client's cookie
-	cookie = Cookie.SimpleCookie();
-	cookie_string = check_cookie();
-	cookie.load(cookie_string);
-	return cookie;	
-
-
-def create_cookie(sid):
-	# Create cookie for server to send
-	cookie = Cookie.SimpleCookie();
-	cookie["SID"] = sid
-	return cookie
-	
-
-def generate_sid():
-	sid = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(45));
-	return sid;

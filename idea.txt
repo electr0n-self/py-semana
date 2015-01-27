@@ -7,3 +7,7 @@ Each time a script is run I check for the IP in the DB. If it exists I open the 
 Then if after X minutes they are still inactive. A script running on the server that is checking for inactivity logs them out.
 
 I could append the session ID to the url and validate it against their login IP each time. This prevents someone else from pasting the url and becoming them.
+
+
+More info at:
+http://www.technicalinfo.net/papers/WebBasedSessionManagement.html
